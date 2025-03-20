@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             QJsonObject obj;
             obj.insert("id", query.value(0).toJsonValue());
             obj.insert("note", query.value(1).toJsonValue());
-            obj.insert("date", query.value(2).toString());
+            obj.insert("date", query.value(2).toDateTime().toString(Qt::ISODate));
             response.push_back(obj);
         }
         return QHttpServerResponse{ response };
