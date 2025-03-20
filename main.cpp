@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     QHttpServer httpServer;
 
     httpServer.route(root + u"notes"_s, QHttpServerRequest::Method::Get, [](const QHttpServerRequest &request){
-        QSqlQuery query("SELECT * FROM notes");
+        QSqlQuery query("SELECT * FROM notes ORDER BY date DESC");
         QJsonArray response;
         while (query.next()) {
             QJsonObject obj;
