@@ -13,18 +13,18 @@
 using namespace Qt::StringLiterals;
 using StatusCode = QHttpServerResponder::StatusCode;
 
-constexpr int port = 8080;
+constexpr int port = 53998;
 const QString root = u"/api/v1/"_s;
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
-    db.setHostName("127.0.0.1");
-    db.setDatabaseName("thunder_note");
-    db.setUserName("postgres");
-    // db.setPassword("J0a1m8");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setHostName("Thunder_Note");
+    db.setDatabaseName("notes.sdb");
+    // db.setUserName("postgres");
+    // db.setPassword("postgres");
     if (!db.open()) {
         qCritical() << "Can't open DB";
         return -1;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         QSqlQuery query;
         query.prepare("INSERT INTO notes(note, date) values (:note, :date)");
         query.bindValue(":note", note);
-        query.bindValue(":date", QDateTime::currentDateTime());
+        query.bindValue(":date", QDateTime::currentDateTimeUtc());
         if (!query.exec()) {
             qCritical() << "Moare POST-UL: " << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         query.prepare("UPDATE notes SET note=:note, date=:date WHERE id=:id");
         query.bindValue(":id", itemId);
         query.bindValue(":note", note);
-        query.bindValue(":date", QDateTime::currentDateTime());
+        query.bindValue(":date", QDateTime::currentDateTimeUtc());
         if (!query.exec()) {
             qCritical() << "Moare PUT-UL: " << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
         QSqlQuery query;
         query.prepare("DELETE FROM notes WHERE id=:id");
         query.bindValue(":id", itemId);
-        QJsonObject response;
         if (!query.exec()) {
             qCritical() << "Moare DELETE-UL: " << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
