@@ -33,13 +33,13 @@ int main(int argc, char *argv[])
     QHttpServer httpServer;
 
     httpServer.route(root + u"notes"_s, QHttpServerRequest::Method::Get, [](const QHttpServerRequest &request){
-        QSqlQuery query("SELECT * FROM notes");
+        QSqlQuery query("SELECT * FROM notes ORDER BY date DESC");
         QJsonArray response;
         while (query.next()) {
             QJsonObject obj;
             obj.insert("id", query.value(0).toJsonValue());
             obj.insert("note", query.value(1).toJsonValue());
-            obj.insert("date", query.value(2).toString());
+            obj.insert("date", query.value(2).toDateTime().toString(Qt::ISODate));
             response.push_back(obj);
         }
         return QHttpServerResponse{ response };
