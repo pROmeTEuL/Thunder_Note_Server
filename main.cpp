@@ -23,10 +23,21 @@ int main(int argc, char *argv[])
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName("Thunder_Note");
     db.setDatabaseName("notes.sdb");
-    // db.setUserName("postgres");
-    // db.setPassword("postgres");
     if (!db.open()) {
         qCritical() << "Can't open DB";
+        return -1;
+    }
+
+    QSqlQuery query;
+    QString createTableQuery =
+        "CREATE TABLE IF NOT EXISTS notes ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "note TEXT NOT NULL, "
+        "date TIMESTAMP NOT NULL"
+        ");";
+
+    if (!query.exec(createTableQuery)) {
+        qCritical() << "Failed to create table:" << query.lastError().text();
         return -1;
     }
 
@@ -44,13 +55,14 @@ int main(int argc, char *argv[])
         }
         return QHttpServerResponse{ response };
     });
+
     httpServer.route(root + u"notes/<arg>"_s, QHttpServerRequest::Method::Get, [](qint64 itemId, const QHttpServerRequest &request){
         QSqlQuery query;
         query.prepare("SELECT * FROM notes WHERE id=:id");
         query.bindValue(":id", itemId);
         QJsonObject response;
         if (!query.exec()) {
-            qCritical() << "Moare GET-UL: " << query.lastError().text();
+            qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
         }
         while (query.next()) {
@@ -62,6 +74,7 @@ int main(int argc, char *argv[])
             return QHttpServerResponse{ StatusCode::NotFound };
         return QHttpServerResponse { response };
     });
+
     httpServer.route(root + u"notes"_s, QHttpServerRequest::Method::Post, [](const QHttpServerRequest &request){
         QJsonParseError err;
         auto doc = QJsonDocument::fromJson(request.body(), &err);
@@ -77,11 +90,12 @@ int main(int argc, char *argv[])
         query.bindValue(":note", note);
         query.bindValue(":date", QDateTime::currentDateTimeUtc());
         if (!query.exec()) {
-            qCritical() << "Moare POST-UL: " << query.lastError().text();
+            qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
         }
         return QHttpServerResponse{ StatusCode::Ok };
     });
+
     httpServer.route(root + u"notes/<arg>"_s, QHttpServerRequest::Method::Put, [](qint64 itemId, const QHttpServerRequest &request){
         QJsonParseError err;
         auto doc = QJsonDocument::fromJson(request.body(), &err);
@@ -98,17 +112,18 @@ int main(int argc, char *argv[])
         query.bindValue(":note", note);
         query.bindValue(":date", QDateTime::currentDateTimeUtc());
         if (!query.exec()) {
-            qCritical() << "Moare PUT-UL: " << query.lastError().text();
+            qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
         }
         return QHttpServerResponse{ StatusCode::Ok };
     });
+
     httpServer.route(root + u"notes/<arg>"_s, QHttpServerRequest::Method::Delete, [](qint64 itemId, const QHttpServerRequest &request){
         QSqlQuery query;
         query.prepare("DELETE FROM notes WHERE id=:id");
         query.bindValue(":id", itemId);
         if (!query.exec()) {
-            qCritical() << "Moare DELETE-UL: " << query.lastError().text();
+            qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
         }
         return QHttpServerResponse{ StatusCode::Ok };
@@ -119,8 +134,5 @@ int main(int argc, char *argv[])
         qCritical() << "Server failed to listen on a port: " << port;
         return 0;
     }
-    //quint16 port = tcpserver->serverPort();
-    //tcpserver.release();
-
     return app.exec();
 }
