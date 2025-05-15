@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
         QSqlQuery query;
         query.prepare("INSERT INTO notes(note, date) values (:note, :date)");
         query.bindValue(":note", note);
-        query.bindValue(":date", QDateTime::currentDateTimeUtc());
+        query.bindValue(":date", QDateTime::currentDateTime());
         if (!query.exec()) {
             qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         query.prepare("UPDATE notes SET note=:note, date=:date WHERE id=:id");
         query.bindValue(":id", itemId);
         query.bindValue(":note", note);
-        query.bindValue(":date", QDateTime::currentDateTimeUtc());
+        query.bindValue(":date", QDateTime::currentDateTime());
         if (!query.exec()) {
             qCritical() << query.lastError().text();
             return QHttpServerResponse{ StatusCode::InternalServerError };
